@@ -1,0 +1,7 @@
+
+/* Light Theme for SpineAnalyzer Pro */
+/* Placeholder - using system defaults largely */
+QMainWindow, QDialog {
+    background-color: #f0f0f0;
+    color: #000000;
+}
