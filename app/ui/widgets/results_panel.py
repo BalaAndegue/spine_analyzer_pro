@@ -1,14 +1,15 @@
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, 
-    QLabel, QGroupBox, QHeaderView, QTabWidget, QTextEdit
+    QLabel, QHeaderView, QTabWidget, QTextEdit, QScrollArea
 )
 from PySide6.QtCore import Qt
 
 from ..core.logger import get_logger
+from .custom_widgets import ModernCard, InfoRow
 
 logger = get_logger(__name__)
 
@@ -22,29 +23,43 @@ class ResultsPanel(QWidget):
     def setup_ui(self):
         """Configurer l'interface"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(0, 5, 0, 0)
         
         # Onglets pour différents types de résultats
         self.tabs = QTabWidget()
+        self.tabs.setDocumentMode(True)
         
-        # Onglet Anomalies
+        # --- Onglet Anomalies ---
+        self.anomalies_widget = QWidget()
+        anom_layout = QVBoxLayout(self.anomalies_widget)
+        anom_layout.setContentsMargins(5, 5, 5, 5)
+        
         self.anomalies_tree = QTreeWidget()
-        self.anomalies_tree.setHeaderLabels(["Type", "Slice", "Confiance", "Détails"])
+        self.anomalies_tree.setHeaderLabels(["Type", "Slice", "Conf", "Détails"])
         self.anomalies_tree.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.tabs.addTab(self.anomalies_tree, "Anomalies")
+        self.anomalies_tree.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.anomalies_tree.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.anomalies_tree.setAlternatingRowColors(True)
+        anom_layout.addWidget(self.anomalies_tree)
         
-        # Onglet Métriques
+        self.tabs.addTab(self.anomalies_widget, "Anomalies")
+        
+        # --- Onglet Métriques ---
+        self.metrics_scroll = QScrollArea()
+        self.metrics_scroll.setWidgetResizable(True)
         self.metrics_widget = QWidget()
         self.metrics_layout = QVBoxLayout(self.metrics_widget)
-        self.metrics_label = QLabel("Aucune métrique disponible")
-        self.metrics_label.setAlignment(Qt.AlignTop)
-        self.metrics_layout.addWidget(self.metrics_label)
-        self.tabs.addTab(self.metrics_widget, "Métriques")
+        self.metrics_layout.setSpacing(2)
+        self.metrics_layout.setAlignment(Qt.AlignTop)
         
-        # Onglet Résumé/Recommandations
+        self.metrics_scroll.setWidget(self.metrics_widget)
+        self.tabs.addTab(self.metrics_scroll, "Métriques")
+        
+        # --- Onglet Résumé ---
         self.summary_text = QTextEdit()
         self.summary_text.setReadOnly(True)
-        self.tabs.addTab(self.summary_text, "Résumé")
+        self.summary_text.setStyleSheet("border: none; padding: 10px;")
+        self.tabs.addTab(self.summary_text, "Rapport")
         
         layout.addWidget(self.tabs)
         
@@ -62,43 +77,60 @@ class ResultsPanel(QWidget):
             item.setText(2, f"{conf:.2f}")
             item.setText(3, str(anomaly.get('description', '')))
             
-            # Color code based on confidence or severity (optional)
+            # Highlight severe anomalies ?
+            if conf > 0.8:
+                item.setForeground(0, Qt.red)
             
         # 2. Métriques
         quantitative = results.get('quantitative', {})
-        metrics_text = "<h3>Métriques Rachidiennes</h3>"
-        metrics_text += "<ul>"
-        for k, v in quantitative.items():
-            nice_key = k.replace('_', ' ').title()
-            if isinstance(v, float):
-                metrics_text += f"<li><b>{nice_key}:</b> {v:.2f}</li>"
-            else:
-                metrics_text += f"<li><b>{nice_key}:</b> {v}</li>"
-        metrics_text += "</ul>"
-        self.metrics_label.setText(metrics_text)
+        if quantitative:
+            card = ModernCard("Métriques Rachidiennes")
+            for k, v in quantitative.items():
+                nice_key = k.replace('_', ' ').title()
+                val_str = f"{v:.2f}" if isinstance(v, float) else str(v)
+                row = InfoRow(nice_key, val_str)
+                card.add_widget(row)
+            self.metrics_layout.addWidget(card)
+        else:
+            self.metrics_layout.addWidget(QLabel("Aucune métrique disponible"))
         
         # 3. Résumé
-        summary = results.get('summary', {})
-        recs = summary.get('recommendations', [])
-        
-        summary_html = "<h2>Rapport Sommaire</h2>"
-        summary_html += f"<p><b>Date:</b> {summary.get('analysis_date', '-')}</p>"
-        summary_html += f"<p><b>Total Anomalies:</b> {summary.get('total_anomalies', 0)}</p>"
-        
-        if recs:
-            summary_html += "<h3>Recommandations:</h3><ul>"
-            for rec in recs:
-                summary_html += f"<li>{rec}</li>"
-            summary_html += "</ul>"
-            
-        self.summary_text.setHtml(summary_html)
+        self.update_summary(results.get('summary', {}))
         
         # Focus sur l'onglet anomalies s'il y en a
         if anomalies:
             self.tabs.setCurrentIndex(0)
+            
+    def update_summary(self, summary: dict):
+        recs = summary.get('recommendations', [])
+        
+        css = """
+        <style>
+            h2 { color: #2196f3; }
+            h3 { color: #e0e0e0; margin-top: 10px; }
+            p { margin-bottom: 5px; }
+            li { margin-bottom: 3px; }
+        </style>
+        """
+        
+        html = f"{css}<h2>Rapport Sommaire</h2>"
+        html += f"<p><b>Date:</b> {summary.get('analysis_date', '-')}</p>"
+        html += f"<p><b>Total Anomalies:</b> {summary.get('total_anomalies', 0)}</p>"
+        
+        if recs:
+            html += "<h3>Recommandations:</h3><ul>"
+            for rec in recs:
+                html += f"<li>{rec}</li>"
+            html += "</ul>"
+            
+        self.summary_text.setHtml(html)
 
     def clear(self):
         """Effacer les résultats"""
         self.anomalies_tree.clear()
-        self.metrics_label.setText("Aucune métrique disponible")
+        # Clear metrics layout
+        while self.metrics_layout.count():
+            child = self.metrics_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
         self.summary_text.clear()
