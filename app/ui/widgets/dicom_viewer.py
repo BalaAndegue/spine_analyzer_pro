@@ -17,8 +17,8 @@ from PySide6.QtGui import (
     QMouseEvent, QWheelEvent, QKeyEvent
 )
 
-from ..data.dicom_loader import PatientData, SliceData
-from ..core.logger import get_logger
+from ...data.dicom_loader import PatientData
+from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -394,7 +394,7 @@ class DICOMViewer(QWidget):
         # Copier les données car l'array peut être libéré
         return image.copy()
     
-    def get_current_slice(self) -> Optional[SliceData]:
+    def get_current_slice(self):
         """Obtenir la slice courante selon le mode de vue"""
         if not self.patient_data:
             return None
@@ -414,9 +414,11 @@ class DICOMViewer(QWidget):
         
         slice_data = self.get_current_slice()
         if slice_data:
+            # Get position from DICOM metadata if available
+            position = getattr(slice_data, 'InstanceNumber', self.current_slice_index + 1)
             info = f"""
             Slice: {self.current_slice_index + 1}/{len(self.patient_data.slices)} | 
-            Position: {slice_data.position} | 
+            Instance: {position} | 
             WW/WL: {self.window_width}/{self.window_level} | 
             Zoom: {self.zoom_factor:.2f}x
             """

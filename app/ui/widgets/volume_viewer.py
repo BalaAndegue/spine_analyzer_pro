@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, Slot, QTimer
 from PySide6.QtGui import QColor
 
-from ..core.logger import get_logger
+from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

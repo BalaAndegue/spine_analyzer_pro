@@ -18,7 +18,7 @@ from .dialogs import (
     SettingsDialog,
     ExportDialog,
     AboutDialog,
-    ModelSelectDialog
+    # ModelSelectDialog  # TODO: Implement ModelSelectDialog
 )
 
 __all__ = [
@@ -36,5 +36,5 @@ __all__ = [
     'SettingsDialog',
     'ExportDialog',
     'AboutDialog',
-    'ModelSelectDialog'
+    # 'ModelSelectDialog'
 ]

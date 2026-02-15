@@ -11,7 +11,7 @@ from .progress_dialog import ProgressDialog
 from .results_panel import ResultsPanel
 from .control_panel import ControlPanel
 from .patient_info_widget import PatientInfoWidget
-from .tool_bar import ToolBar
+# from .tool_bar import ToolBar  # TODO: Implement ToolBar widget
 
 __all__ = [
     'DICOMViewer',
@@ -23,5 +23,5 @@ __all__ = [
     'ResultsPanel',
     'ControlPanel',
     'PatientInfoWidget',
-    'ToolBar'
+    # 'ToolBar'
 ]

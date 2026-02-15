@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-from ..core.logger import get_logger
+from ...core.logger import get_logger
 from .custom_widgets import ModernCard, InfoRow
 
 logger = get_logger(__name__)

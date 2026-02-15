@@ -3,11 +3,11 @@ import logging
 from typing import Dict, Any, Optional
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QLabel, QAIModel
+    QWidget, QVBoxLayout, QPushButton, QLabel
 )
 from PySide6.QtCore import Qt, Signal, Slot
 
-from ..core.logger import get_logger
+from ...core.logger import get_logger
 from .custom_widgets import ModernCard, InfoRow, StatusLed
 
 logger = get_logger(__name__)
