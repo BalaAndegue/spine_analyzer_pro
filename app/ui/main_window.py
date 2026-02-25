@@ -318,13 +318,16 @@ class MainWindow(QMainWindow):
             try:
                 manager = DICOMManager()
                 self.current_patient = manager.load_folder(folder)
+                # S'assurer que dicom_folder est bien dans .info et .dicom_folder
+                self.current_patient.dicom_folder = folder
+                self.current_patient.info['dicom_folder'] = folder
                 
                 # Update UI
                 self.dicom_viewer.set_patient_data(self.current_patient)
                 self.control_panel.set_patient_info(self.current_patient.info)
                 self.patient_label.setText(f"Patient: {self.current_patient.info.get('name', 'Inconnu')}")
                 self.patient_loaded.emit(self.current_patient.info)
-                self.status_bar.showMessage("Prêt", 3000)
+                self.status_bar.showMessage(f"DICOM chargé : {len(self.current_patient.slices)} coupes", 3000)
                 
             except Exception as e:
                 QMessageBox.critical(self, "Erreur", str(e))
@@ -354,7 +357,12 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
         
         # Start Worker
-        self.worker = AnalysisWorker(self.current_patient)
+        patient_dict = {
+            'id': self.current_patient.info.get('id', 'Unknown'),
+            'dicom_folder': self.current_patient.dicom_folder,
+            'info': self.current_patient.info,
+        }
+        self.worker = AnalysisWorker(patient_dict)
         self.thread = QThread()
         self.worker.moveToThread(self.thread)
         
@@ -388,12 +396,14 @@ class MainWindow(QMainWindow):
         self.action_run_analysis.setEnabled(True)
         self.action_stop_analysis.setEnabled(False)
         self.progress_bar.setVisible(False)
-        self.status_bar.showMessage("Analyse terminée", 5000)
+        self.status_bar.showMessage("Analyse complète terminée", 5000)
         
         self.results_panel.set_results(results)
-        self.current_volume = results.get('volume_3d')
-        if self.current_volume:
-            self.volume_viewer.set_volume_data(self.current_volume)
+        # Ne pas appeler set_volume_data ici → utiliser set_mesh_data si mesh disponible
+        mesh = results.get('reconstruction', {}).get('mesh') if isinstance(results.get('reconstruction'), dict) else None
+        if mesh is not None:
+            self.volume_viewer.set_mesh_data(mesh)
+            self.visualization_tabs.setCurrentIndex(1)
 
     @Slot(str)
     def on_analysis_error(self, err):
@@ -467,8 +477,8 @@ class MainWindow(QMainWindow):
             self.volume_viewer.set_mesh_data(mesh)
             # Basculer automatiquement sur l'onglet 3D
             self.visualization_tabs.setCurrentIndex(1)
-            n_v = stats.get('mesh_vertices', '?')
-            n_f = stats.get('mesh_faces', '?')
+            n_v = stats.get('mesh_vertices', 0)
+            n_f = stats.get('mesh_faces', 0)
             bone_pct = stats.get('bone_fraction_pct', 0)
             self.status_bar.showMessage(
                 f"✅ Reconstruction 3D terminée — {n_v:,} sommets, {n_f:,} faces, os: {bone_pct:.1f}%",
@@ -480,12 +490,6 @@ class MainWindow(QMainWindow):
                                 "Aucun maillage 3D généré.\n"
                                 "Vérifiez que le volume DICOM contient des structures osseuses "
                                 "avec des valeurs HU entre 200 et 1600.")
-
-        # Stocker le volume normalisé
-        norm_vol = results.get('normalized_volume')
-        if norm_vol is not None:
-            self.current_volume = norm_vol
-            self.volume_viewer.set_volume_data(norm_vol)
 
     @Slot(str)
     def _on_recon_error(self, err: str):

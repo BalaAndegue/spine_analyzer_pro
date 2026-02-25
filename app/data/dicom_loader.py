@@ -36,13 +36,18 @@ class DICOMManager:
             for file in files:
                 filepath = os.path.join(root, file)
                 try:
-                    # Tenter de lire le fichier comme DICOM
+                    # Lecture partielle (rapide) sans les pixels
                     ds = pydicom.dcmread(filepath, stop_before_pixels=True)
                     
-                    # Vérifier si c'est une image
-                    if "PixelData" in ds:
-                        # Re-lire avec les pixels si nécessaire, ou stocker le chemin pour lecture lazy
-                        # Pour l'instant on lit tout le dataset
+                    # Identifier les fichiers image DICOM :
+                    # Un fichier image doit avoir Rows ET Columns (dimensions image)
+                    # La vérification PixelData avec stop_before_pixels=True ne fonctionne pas
+                    has_image = hasattr(ds, 'Rows') and hasattr(ds, 'Columns') and \
+                                int(getattr(ds, 'Rows', 0)) > 0 and \
+                                int(getattr(ds, 'Columns', 0)) > 0
+                    
+                    if has_image:
+                        # Lire le fichier complet avec les pixels
                         full_ds = pydicom.dcmread(filepath)
                         dicom_files.append(full_ds)
                         
