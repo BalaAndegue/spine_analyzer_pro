@@ -1,339 +1,293 @@
-# **SpineAnalyzer Pro 🏥**  
-*Intelligence Artificielle pour l'analyse rachidienne médicale*
+<div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Platform](https://img.shields.io/badge/Platform-Windows%7CLinux%7CMac-lightgrey)
-![Status](https://img.shields.io/badge/Status-In%20Development-orange)
+# 🦴 SpineAnalyzer Pro
 
-## **🎯 Présentation du Projet**
+### Logiciel d'Aide au Diagnostic Rachidien par Imagerie CT
 
-**SpineAnalyzer Pro** est une application médicale innovante qui utilise l'**Intelligence Artificielle** pour automatiser l'analyse des images rachidiennes. Conçue pour les professionnels de santé, elle transforme des radiographies 2D en modèles 3D intelligents et détecte automatiquement les pathologies.
+**Reconstruction 3D · Détection IA des Vertèbres · Analyse Quantitative**
 
-> **⚠️ Important** : Cet outil est un **assistant de diagnostic** destiné aux professionnels de santé qualifiés. Il ne remplace pas l'expertise médicale.
+*Conçu pour des environnements à ressources limitées — aucun GPU requis*
 
 ---
 
-## **✨ Fonctionnalités Principales**
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![PySide6](https://img.shields.io/badge/PySide6-Qt6-41CD52?style=flat-square&logo=qt)](https://doc.qt.io/qtforpython/)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-blue?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)]()
 
-| Fonctionnalité | Description | Statut |
-|---------------|-------------|--------|
-| **📸 Chargement DICOM** | Support complet des formats d'imagerie médicale | ✅ **Terminé** |
-| **🔄 Reconstruction 3D** | Transformation 2D→3D avec segmentation automatique | 🚧 **En développement** |
-| **🤖 Détection IA** | Identification automatique des anomalies | 🔄 **En cours** |
-| **📊 Analyse quantitative** | Mesures biométriques précises | 🚧 **En développement** |
-| **📄 Rapports médicaux** | Génération PDF/DICOM SR annotés | ✅ **Terminé** |
-| **🖥️ Interface intuitive** | Interface type PACS optimisée | ✅ **Terminé** |
-
-### **Pathologies détectées :**
-- ✅ **Fractures vertébrales** (compression, tassement)
-- 🚧 **Tumeurs rachidiennes** (classification bénin/malin)
-- 🔄 **Scoliose** (calcul angle de Cobb automatisé)
-- 🚧 **Hernies discales** (localisation et sévérité)
-- 🔄 **Malformations congénitales**
+</div>
 
 ---
 
-## **🛠️ Stack Technique Complète**
+## 🌍 Vision du Projet
 
-### **💻 Interface Utilisateur**
-```yaml
-Framework: PySide6 / Qt6
-Rendu 3D: VTK + PyVista
-Charts: Matplotlib + Plotly
-Style: QSS (thèmes clair/sombre)
-```
+> **SpineAnalyzer Pro est né d'un constat simple : dans les hôpitaux camerounais et plus largement en Afrique subsaharienne, des milliers de patients souffrant de pathologies rachidiennes ne bénéficient pas d'un diagnostic précis, faute d'outils adaptés et accessibles.**
 
-### **🧠 Intelligence Artificielle**
-```yaml
-Deep Learning: PyTorch 2.0+
-Vision: MONAI (Medical AI)
-Segmentation: nnUNet, TotalSegmentator
-Détection: YOLOv8 (Ultralytics)
-Optimisation: ONNX Runtime
-```
+Ce projet vise à mettre entre les mains des médecins, radiologues et chirurgiens orthopédiques un **outil d'aide au diagnostic rachidien**, exploitable sur du matériel standard sans carte graphique dédiée, et fonctionnel même en environnement déconnecté.
 
-### **🩺 Imagerie Médicale**
-```yaml
-DICOM: pydicom + SimpleITK
-Traitement: OpenCV, scikit-image
-Formats: NIfTI, NRRD supportés
-Visualisation: ITK, nibabel
-```
-
-### **📊 Données & Analyse**
-```yaml
-Calcul: NumPy, SciPy
-DataFrames: pandas
-ML: scikit-learn
-Base de données: SQLite
-```
-
-### **📦 Infrastructure**
-```yaml
-Gestion: pip + venv
-Packaging: PyInstaller
-Tests: pytest
-CI/CD: GitHub Actions
-Documentation: Sphinx + MkDocs
-```
+**Pathologies ciblées :**
+- Fractures-tassements vertébraux (traumatiques ou ostéoporotiques)
+- Scoliose et déformations rachidiennes (mesure de l'angle de Cobb)
+- Spondylolisthésis
+- Compression médullaire
+- Suivi post-chirurgical
 
 ---
 
-## **📁 Architecture du Projet**
+## 📸 Aperçu
+
+<div align="center">
+
+### Reconstruction 3D de la colonne lombaire (L1–L5)
+
+![Reconstruction 3D avec labels vertèbres](docs/images/spine_labeled.png)
+
+*5 vertèbres lombaires détectées automatiquement, classifiées par IA (vert = normal, orange = ostéopénique, rouge = suspect, violet = tassement)*
+
+### Vues multiplanaires
+
+![Aperçu 3 vues](docs/images/spine_3d_preview.png)
+
+*Vue isométrique · antéro-postérieure · latérale — rotation interactive 360°*
+
+</div>
+
+---
+
+## 🎯 Ce que nous voulions faire vs. ce que nous avons fait
+
+### Objectif initial
+
+Utiliser des **modèles d'IA lourds** (réseaux de neurones pré-entraînés, YOLO, nnU-Net, TotalSegmentator) pour la détection et la segmentation automatique des pathologies rachidiennes depuis des images CT DICOM.
+
+### Contraintes identifiées en cours de développement
+
+| Contrainte | Impact |
+|---|---|
+| Absence de GPU dédié (iGPU Intel + 940MX 2 GB) | Modèles lourds → 30–60 min d'inférence, inacceptable |
+| OpenGL 3.2 non supporté par le driver (EGL headless) | PyVista/VTK → crash au rendu 3D |
+| RAM limitée à 11 GB | Modèles > 500 MB rejetés |
+| Environnement hospitalier camerounais : PC bureautique | Pas de workstation spécialisée |
+
+### Solution adoptée — Architecture "Lightweight AI"
+
+Plutôt que d'abandonner l'IA, nous avons privilégié des **algorithmes sur mesure** combinés à de l'**apprentissage automatique léger** :
 
 ```
-spine_analyzer_pro/
-├── 📂 app/                          # Application principale
-│   ├── 📁 core/                     # Cœur de l'app (config, logging)
-│   ├── 📁 ui/                       # Interface PySide6
-│   │   ├── main_window.py          # Fenêtre principale
-│   │   ├── widgets/                # Composants personnalisés
-│   │   └── styles/                 # Thèmes QSS
-│   ├── 📁 data/                     # Gestion données médicales
-│   ├── 📁 ai/                       # Modules IA
-│   │   ├── reconstruction/         # Reconstruction 3D
-│   │   ├── detection/              # Détection anomalies
-│   │   └── models/                 # Modèles pré-entraînés
-│   ├── 📁 analysis/                 # Analyse quantitative
-│   ├── 📁 visualization/            # Rendu 2D/3D
-│   ├── 📁 reporting/                # Génération rapports
-│   └── 📁 workers/                  # Traitement asynchrone
-├── 📂 models/                       # Modèles IA
-│   ├── segmentation/               # Segmentation vertébrale
-│   └── detection/                  # Détection pathologies
-├── 📂 resources/                    # Ressources statiques
-├── 📂 tests/                        # Tests unitaires
-├── 📂 docs/                         # Documentation
-└── 📂 scripts/                      # Scripts utilitaires
+DICOM → Normalisation HU → Segmentation osseuse (seuillage adaptatif)
+       → Marching Cubes (reconstruction 3D CPU) → Détection vertèbres
+       → RandomForest (classification) → Métriques rachidiennes
 ```
 
----
-
-## **🚀 Installation & Démarrage**
-
-### **Prérequis**
-- Python 3.8 ou supérieur
-- 8GB RAM minimum (16GB recommandé)
-- GPU NVIDIA (optionnel mais recommandé)
-- 5GB d'espace disque libre
-
-### **Installation rapide**
-```bash
-# 1. Cloner le dépôt
-git clone https://github.com/username/spine-analyzer-pro.git
-cd spine-analyzer-pro
-
-# 2. Créer environnement virtuel
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou venv\Scripts\activate  # Windows
-
-# 3. Installer les dépendances
-pip install -r requirements.txt
-
-# 4. Télécharger les modèles IA
-python scripts/download_models.py
-
-# 5. Lancer l'application
-python main.py
-```
-
-### **Installation avec Docker**
-```bash
-# Build l'image
-docker build -t spine-analyzer .
-
-# Lancer le conteneur
-docker run -p 8080:8080 -v ./data:/app/data spine-analyzer
-```
+**Résultat :** pipeline complet en **< 30 secondes**, 60 MB RAM, **zéro GPU**.
 
 ---
 
-## **🎮 Guide d'Utilisation**
+## ✅ État Actuel du Projet
 
-### **Workflow standard :**
-1. **Charger** des images DICOM (dossier ou fichiers)
-2. **Visualiser** les coupes 2D avec outils de navigation
-3. **Lancer la reconstruction 3D** (automatique)
-4. **Analyser les anomalies** détectées par l'IA
-5. **Vérifier et annoter** manuellement si nécessaire
-6. **Générer le rapport médical**
-7. **Exporter** (PDF, DICOM SR, images annotées)
+### Fonctionnalités opérationnelles
 
-### **Raccourcis clavier :**
-| Touche | Action |
-|--------|--------|
-| `Ctrl+O` | Ouvrir dossier DICOM |
-| `F5` | Lancer l'analyse |
-| `Ctrl+S` | Sauvegarder le rapport |
-| `Space` | Pause/reprendre la visualisation |
-| `1-4` | Basculer entre les vues |
+| Module | Statut | Description |
+|---|---|---|
+| 📂 Chargement DICOM | ✅ Complet | Multi-fichiers, extraction spacing réel (mm) |
+| 🔬 Visualisation 2D | ✅ Complet | Fenêtrage WW/WL, 3 vues (axial/coronal/sagittal) |
+| 🦴 Reconstruction 3D | ✅ Complet | Marching Cubes (scikit-image), maillage PyVista |
+| 🖥️ Rendu 3D interactif | ✅ Complet | Matplotlib 3D embarqué, rotation/zoom/palette |
+| 🔍 Détection vertèbres | ✅ Complet | Algorithme profil osseux Z + détection minima locaux |
+| 🤖 Classification IA | ✅ Complet | RandomForest scikit-learn (normal/ostéo/suspect/tassé) |
+| 📏 Métriques quantitatives | ✅ Complet | 19 métriques : Cobb, HU, volume os, compression |
+| 📋 Rapport clinique | ✅ Complet | Recommandations générées automatiquement |
+| 💾 Export STL / PNG | ✅ Complet | Export du maillage 3D |
 
----
+### Pipeline de détection IA des vertèbres
 
-## **📊 Performances & Validation**
+```python
+# Exemple de ce que produit l'analyse complète
+vertebrae = [
+  {"label": "L5", "height_mm": 62.5, "hu_mean": 508.5, "ml_status": "normal",   "confidence": 0.87},
+  {"label": "L4", "height_mm": 60.0, "hu_mean": 340.2, "ml_status": "ostéopénique", "confidence": 0.72},
+  {"label": "L3", "height_mm": 58.0, "hu_mean": 508.6, "ml_status": "normal",   "confidence": 0.81},
+  {"label": "L2", "height_mm": 42.0, "hu_mean": 290.0, "ml_status": "comprimée", "confidence": 0.68},
+  {"label": "L1", "height_mm": 55.0, "hu_mean": 508.5, "ml_status": "normal",   "confidence": 0.83},
+]
 
-### **Métriques des modèles :**
-| Modèle | Précision | Sensibilité | Spécificité |
-|--------|-----------|-------------|-------------|
-| Segmentation vertèbres | 0.94 Dice | 0.92 | 0.95 |
-| Détection fractures | 0.89 mAP | 0.91 | 0.88 |
-| Classification tumeurs | 0.87 AUC | 0.85 | 0.89 |
-| Calcul angle Cobb | ±1.5° | - | - |
-
-### **Benchmark hardware :**
-| Tâche | CPU (i7) | GPU (RTX 3060) |
-|-------|----------|---------------|
-| Reconstruction 3D | 45s | 12s |
-| Détection anomalies | 8s | 2s |
-| Génération rapport | 10s | 10s |
-| Chargement DICOM | 3s | 3s |
-
----
-
-## **🌍 Contexte Africain & Adaptations**
-
-### **Spécificités :**
-- **Modèles fine-tunés** sur des anatomies africaines
-- **Optimisation** pour équipements de radiologie variés (anciens/récents)
-- **Mode hors ligne** complet (pas de cloud requis)
-- **Interface multilingue** (Français, Anglais, Arabe)
-- **Export adapté** aux systèmes de santé locaux
-
-### **Collaborations :**
-- Hôpitaux universitaires en Afrique
-- Centres de recherche en imagerie médicale
-- Sociétés de radiologie africaines
-
----
-
-## **👨‍💻 Auteur & Contributions**
-
-### **Auteur principal :**
-**Dr. [Votre Nom]**  
-*Chercheur en IA Médicale*  
-📧 contact@medical-ai.org  
-🔗 [LinkedIn](https://linkedin.com/in/...)  
-🐙 [GitHub](https://github.com/...)
-
-### **Contributions :**
-Les contributions sont les bienvenues ! Consultez :
-- [CONTRIBUTING.md](docs/CONTRIBUTING.md) - Guide des contributions
-- [CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) - Code de conduite
-- [ROADMAP.md](docs/ROADMAP.md) - Feuille de route
-
-### **Comment contribuer :**
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push sur la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
----
-
-## **📄 Licence**
-
-Ce projet est sous licence **MIT** - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-> **Avertissement légal** : Ce logiciel est fourni "tel quel", sans garantie d'aucune sorte. L'auteur décline toute responsabilité concernant son utilisation médicale.
-
----
-
-## **🔮 Feuille de Route (Roadmap)**
-
-### **Version 1.0.0 (Actuelle)**
-- ✅ Interface utilisateur complète
-- ✅ Chargement/visualisation DICOM
-- ✅ Reconstruction 3D basique
-- ✅ Rapport PDF simple
-
-### **Version 1.1.0 (Q2 2024)**
-- 🚧 Détection fractures avancée
-- 🚧 Modèles IA fine-tunés
-- 🚧 Export DICOM SR
-- 🚧 Multi-utilisateurs
-
-### **Version 2.0.0 (Q4 2024)**
-- 🔄 Simulation chirurgicale
-- 🔄 Analyse prédictive
-- 🔄 API REST
-- 🔄 Application mobile
-
-### **Future vision**
-- 🌐 Plateforme cloud sécurisée
-- 🤝 Intégration PACS hospitalier
-- 📱 Application tablette pour consultations
-- 🎓 Module de formation médicale
-
----
-
-## **📞 Support & Contact**
-
-### **Support technique :**
-- **Issues GitHub** : [Signaler un bug](https://github.com/username/spine-analyzer-pro/issues)
-- **Discussions** : [Forum GitHub](https://github.com/username/spine-analyzer-pro/discussions)
-- **Email** : support@spine-analyzer.org
-
-### **Documentation :**
-- 📚 [Guide utilisateur](docs/user_guide/) - Manuel complet
-- 🔧 [Guide développeur](docs/developer/) - Documentation technique
-- 🎥 [Tutoriels vidéo](docs/tutorials/) - Vidéos démo
-- ❓ [FAQ](docs/FAQ.md) - Questions fréquentes
-
-### **Communauté :**
-- 💬 [Discord](https://discord.gg/...) - Chat communautaire
-- 🐦 [Twitter](https://twitter.com/SpineAnalyzer) - Annonces
-- 📰 [Blog](https://blog.spine-analyzer.org) - Articles techniques
-
----
-
-## **🌟 Citations & Références**
-
-Si vous utilisez SpineAnalyzer Pro dans vos recherches, citez :
-
-```bibtex
-@software{spineanalyzer2024,
-  title = {SpineAnalyzer Pro: AI-powered Spinal Analysis Software},
-  author = {Votre Nom},
-  year = {2024},
-  url = {https://github.com/username/spine-analyzer-pro},
-  version = {1.0.0},
-  publisher = {GitHub}
+metrics = {
+  "bone_volume_cm3":        855.36,
+  "estimated_cobb_angle_deg": 4.2,
+  "most_compressed_vertebra": "L2",
+  "bone_density_index":      0.215,   # indice ostéoporose
+  "vertebrae_count":          5,
 }
 ```
 
 ---
 
-## **📊 Statistiques du Projet**
+## 🚀 Installation
 
-![GitHub stars](https://img.shields.io/github/stars/username/spine-analyzer-pro?style=social)
-![GitHub forks](https://img.shields.io/github/forks/username/spine-analyzer-pro?style=social)
-![GitHub issues](https://img.shields.io/github/issues/username/spine-analyzer-pro)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/username/spine-analyzer-pro)
+### Prérequis
 
-**Dernière version** : v1.0.0  
-**Taille du projet** : 50+ modules, 15 000+ lignes  
-**Première release** : Janvier 2024  
-**Langues supportées** : FR, EN, AR  
+- Python 3.10 ou supérieur
+- Système : Linux, Windows (macOS non testé)
+- RAM : 4 GB minimum, **8 GB recommandés**
+- GPU : **non requis** ✅
+
+### Installation rapide
+
+```bash
+git clone https://github.com/BalaAndegue/spine_analyzer_pro.git
+cd spine_analyzer_pro
+
+# Créer un environnement virtuel
+python3 -m venv .venv
+source .venv/bin/activate  # Windows : .venv\Scripts\activate
+
+# Installer les dépendances
+pip install -r requirements.txt
+
+# Lancer l'application
+bash launch.sh   # ou : python3 main.py
+```
+
+### Tester avec le dataset synthétique inclus
+
+```bash
+# Générer un scanner CT synthétique (colonne lombaire L1-L5)
+python3 scripts/generate_test_dicom.py
+
+# Le dataset sera dans :  data/test_dicom/
+# Lancer l'app → Fichier → Ouvrir Dossier DICOM → data/test_dicom
+# Puis : F4 (Reconstruction 3D) ou bouton Analyse Complète
+```
 
 ---
 
-## **🎯 Vision & Mission**
+## 🏗️ Architecture Technique
 
-> **Notre mission** : Démocratiser l'accès à des outils d'analyse médicale avancés, en particulier dans les régions où l'expertise radiologique est limitée.
+```
+spine_analyzer_pro/
+├── app/
+│   ├── ai/
+│   │   ├── reconstruction/
+│   │   │   ├── volume_builder.py         # Normalisation + HU windowing
+│   │   │   ├── segmentation.py           # Seuillage osseux adaptatif
+│   │   │   ├── mesh_generator.py         # Marching Cubes → PyVista PolyData
+│   │   │   └── spine_reconstructor.py    # Orchestrateur pipeline
+│   │   └── detection/
+│   │       ├── vertebra_detector.py      # Détection vertèbres par profil Z
+│   │       ├── vertebra_classifier.py    # Classification RandomForest
+│   │       └── anomaly_detector.py       # Détection anomalies (extensible)
+│   ├── analysis/
+│   │   ├── quantitative.py               # 19 métriques rachidiennes
+│   │   └── cobb_calculator.py            # Angle de Cobb
+│   ├── data/
+│   │   └── dicom_loader.py               # Chargement DICOM + extraction spacing
+│   ├── ui/
+│   │   ├── main_window.py                # Fenêtre principale Qt6
+│   │   └── widgets/
+│   │       ├── dicom_viewer.py           # Visualisation 2D DICOM
+│   │       ├── volume_viewer.py          # Rendu 3D Matplotlib (sans GPU)
+│   │       ├── results_panel.py          # Affichage métriques / rapport
+│   │       └── control_panel.py          # Contrôles analyse
+│   └── workers/
+│       ├── analysis_worker.py            # Worker async QThread (analyse complète)
+│       └── reconstruction_worker.py      # Worker async QThread (reconstruction)
+└── scripts/
+    └── generate_test_dicom.py            # Générateur dataset CT synthétique
+```
 
-> **Notre vision** : Devenir la plateforme de référence pour l'analyse rachidienne assistée par IA, combinant précision scientifique et accessibilité.
+---
 
-**"Transformer l'imagerie médicale par l'IA, une vertèbre à la fois."** 🦴✨
+## 🛣️ Roadmap — Ce qui reste à faire
+
+### Court terme (v0.3 — 1 mois)
+
+- [ ] **Angle de Cobb précis** — mesure interactive sur les vues 2D (placement manual de repères)
+- [ ] **Fenêtres HU préréglées** — plusieurs présets cliniques (os, disque, muscle, moelle)
+- [ ] **Export rapport PDF** — rapport structuré exportable pour dossier patient
+- [ ] **Calcul ratio compression** — mesure antéro-postérieure par vertèbre
+- [ ] **Support DICOM-RT** — lecture des structures de contourage
+
+### Moyen terme (v0.5 — 3 mois)
+
+- [ ] **Modèle ONNX léger** — TotalSegmentator Lite (CPU, ~200 MB) pour segmentation vertèbre par vertèbre
+- [ ] **Détection fractures** — classifier entraîné sur données réelles (avec validation radiologique)
+- [ ] **Vues multi-planaires reconstruites (MPR)** — coupes coronales et sagittales vraies
+- [ ] **Base de données patients locale** — suivi longitudinal, comparaison pré/post-op
+- [ ] **Mesure de la cyphose** thoracique et de la lordose lombaire
+
+### Long terme (v1.0 — déploiement hospitalier)
+
+- [ ] **Certification médicale** — validation clinique sur base de données réelles anonymisées
+- [ ] **Connectivité PACS/HL7** — intégration système d'information hospitalier
+- [ ] **Mode hors-ligne complet** — fonctionnel sans internet
+- [ ] **Interface multilingue** — Français · Anglais · (Arabe)
+- [ ] **Formation médicale intégrée** — guides cliniques contextuels
+- [ ] **Télémédecine** — partage de cas entre établissements camerounais
+
+---
+
+## 💡 Choix Techniques Clés
+
+### Pourquoi Marching Cubes au lieu de l'IA ?
+
+Les modèles d'IA de segmentation 3D médicale (nnU-Net, TotalSegmentator) nécessitent généralement :
+- Un GPU NVIDIA avec CUDA (8–16 GB VRAM)
+- 16–32 GB de RAM
+- Des durées d'inférence de 5–30 minutes
+
+**Marching Cubes** est un algorithme mathématique pur, déterministe, qui :
+- S'exécute entièrement sur CPU en < 30 secondes
+- Ne nécessite aucun modèle pré-entraîné
+- Produit des maillages 3D de qualité clinique
+- Est robuste et reproductible
+
+### Pourquoi Matplotlib 3D au lieu de PyVista/VTK ?
+
+PyVista/VTK nécessite **OpenGL 3.2**, absent sur les PC bureautiques sous Linux sans driver propriétaire. Matplotlib 3D utilise un **rendu logiciel** compatible avec tout système.
+
+### Pourquoi RandomForest au lieu d'un réseau de neurones ?
+
+| Critère | RandomForest | Réseau de neurones |
+|---|---|---|
+| RAM nécessaire | < 10 MB | 100 MB – 10 GB |
+| GPU | Non | Recommandé |
+| Données d'entraînement | Quelques centaines | Des milliers |
+| Temps d'inférence | < 1 ms | 10 ms – minutes |
+| Explicabilité | ✅ Oui | ❌ Boîte noire |
+
+---
+
+## 🤝 Contribution
+
+Ce projet est ouvert à la contribution. Les priorités actuelles :
+1. **Radiologue / Chirurgien orthopédiste** — validation clinique des algorithmes de détection
+2. **Développeur Python/PyQt** — amélioration de l'interface utilisateur
+3. **Data scientist médical** — entraînement du classificateur sur données réelles
+
+📧 Contact : [BalaAndegue](https://github.com/BalaAndegue)
+
+---
+
+## 📚 Références Scientifiques
+
+- Lorensen & Cline (1987) — *Marching Cubes: A high resolution 3D surface construction algorithm*
+- Cobb (1948) — *Outline for the study of scoliosis*
+- Genant et al. (1993) — *Vertebral fracture assessment using a semiquantitative technique*
+
+---
+
+## ⚠️ Avertissement Médical
+
+> **SpineAnalyzer Pro est un outil d'AIDE au diagnostic, pas un dispositif médical certifié.**  
+> Toute décision clinique doit rester sous la responsabilité d'un professionnel de santé qualifié.  
+> Le logiciel est en cours de développement et de validation clinique.
 
 ---
 
 <div align="center">
-  
-**⭐ Si ce projet vous est utile, n'hésitez pas à lui donner une étoile sur GitHub !** ⭐
 
-[![Star History Chart](https://api.star-history.com/svg?repos=username/spine-analyzer-pro&type=Date)](https://star-history.com/#username/spine-analyzer-pro&Date)
+**Fait avec ❤️ pour améliorer les soins rachidiens en Afrique**
+
+*SpineAnalyzer Pro — v0.2-alpha — Février 2026*
 
 </div>
