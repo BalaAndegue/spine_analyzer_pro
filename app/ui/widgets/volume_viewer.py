@@ -218,11 +218,15 @@ class VolumeViewer(QWidget):
         
         if volume_data is not None:
             try:
-                # Créer un PyVista UniformGrid
-                grid = pv.UniformGrid()
-                grid.dimensions = volume_data.shape
-                grid.spacing = (1, 1, 1)  # À ajuster selon les métadonnées DICOM
-                grid.point_data["values"] = volume_data.flatten(order="F")
+                # pv.ImageData remplace pv.UniformGrid (déprécié depuis PyVista 0.39)
+                try:
+                    grid = pv.ImageData()
+                except AttributeError:
+                    grid = pv.UniformGrid()  # Fallback anciennes versions
+
+                grid.dimensions = np.array(volume_data.shape) + 1
+                grid.spacing = (1, 1, 1)
+                grid.cell_data["values"] = volume_data.flatten(order="F")
                 
                 # Ajouter au plotter
                 self.plotter.add_volume(

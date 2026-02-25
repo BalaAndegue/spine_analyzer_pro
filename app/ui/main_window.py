@@ -36,6 +36,7 @@ from ..data.dicom_loader import DICOMManager
 from ..ai.reconstruction.spine_reconstructor import SpineReconstructor
 from ..ai.detection.anomaly_detector import AnomalyDetector
 from ..workers.analysis_worker import AnalysisWorker
+from ..workers.reconstruction_worker import ReconstructionWorker
 from ..core.config import Config
 from ..core.logger import get_logger
 
@@ -151,6 +152,14 @@ class MainWindow(QMainWindow):
         # --- Tools ---
         analysis_menu = menubar.addMenu("&Analyse")
         
+        self.action_reconstruct_3d = QAction(self.get_icon("cube"), "&Reconstruire en 3D", self)
+        self.action_reconstruct_3d.setShortcut("F4")
+        self.action_reconstruct_3d.setEnabled(False)
+        self.action_reconstruct_3d.triggered.connect(self.run_reconstruction)
+        analysis_menu.addAction(self.action_reconstruct_3d)
+
+        analysis_menu.addSeparator()
+
         self.action_run_analysis = QAction(self.get_icon("play"), "&Lancer Analyse Complète", self)
         self.action_run_analysis.setShortcut("F5")
         self.action_run_analysis.setEnabled(False)
@@ -176,6 +185,8 @@ class MainWindow(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, self.main_toolbar)
         
         self.main_toolbar.addAction(self.action_open_dicom)
+        self.main_toolbar.addSeparator()
+        self.main_toolbar.addAction(self.action_reconstruct_3d)
         self.main_toolbar.addSeparator()
         self.main_toolbar.addAction(self.action_run_analysis)
         self.main_toolbar.addAction(self.action_stop_analysis)
@@ -396,6 +407,92 @@ class MainWindow(QMainWindow):
     @Slot(dict)
     def on_patient_loaded(self, info):
         self.action_run_analysis.setEnabled(True)
+        self.action_reconstruct_3d.setEnabled(True)
+
+    @Slot()
+    def run_reconstruction(self):
+        """Lancer la reconstruction 3D dans un thread séparé."""
+        if not self.current_patient:
+            return
+
+        dicom_folder = getattr(self.current_patient, 'dicom_folder', None)
+        if not dicom_folder:
+            # Fallback : essayer dicom_folder depuis le dict info
+            dicom_folder = self.current_patient.info.get('dicom_folder')
+
+        if not dicom_folder:
+            QMessageBox.warning(self, "Reconstruction 3D",
+                                "Impossible de localiser le dossier DICOM du patient.")
+            return
+
+        self.action_reconstruct_3d.setEnabled(False)
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+        self.status_bar.showMessage("Reconstruction 3D en cours...")
+
+        # Créer le worker
+        self.recon_worker = ReconstructionWorker(
+            dicom_folder=dicom_folder,
+            step_size=2,
+            decimate_ratio=0.3,
+        )
+        self.recon_thread = QThread()
+        self.recon_worker.moveToThread(self.recon_thread)
+
+        self.recon_thread.started.connect(self.recon_worker.run)
+        self.recon_worker.progress.connect(self._on_recon_progress)
+        self.recon_worker.finished.connect(self._on_recon_finished)
+        self.recon_worker.error.connect(self._on_recon_error)
+
+        self.recon_worker.finished.connect(self.recon_thread.quit)
+        self.recon_worker.finished.connect(self.recon_worker.deleteLater)
+        self.recon_thread.finished.connect(self.recon_thread.deleteLater)
+
+        self.recon_thread.start()
+
+    @Slot(int, str)
+    def _on_recon_progress(self, pct: int, msg: str):
+        self.progress_bar.setValue(pct)
+        self.status_bar.showMessage(f"3D: {msg}")
+
+    @Slot(dict)
+    def _on_recon_finished(self, results: dict):
+        self.action_reconstruct_3d.setEnabled(True)
+        self.progress_bar.setVisible(False)
+
+        mesh = results.get('mesh')
+        stats = results.get('stats', {})
+
+        if mesh is not None:
+            self.volume_viewer.set_mesh_data(mesh)
+            # Basculer automatiquement sur l'onglet 3D
+            self.visualization_tabs.setCurrentIndex(1)
+            n_v = stats.get('mesh_vertices', '?')
+            n_f = stats.get('mesh_faces', '?')
+            bone_pct = stats.get('bone_fraction_pct', 0)
+            self.status_bar.showMessage(
+                f"✅ Reconstruction 3D terminée — {n_v:,} sommets, {n_f:,} faces, os: {bone_pct:.1f}%",
+                8000
+            )
+        else:
+            self.status_bar.showMessage("⚠️ Reconstruction 3D : maillage vide (vérifier les données DICOM)", 5000)
+            QMessageBox.warning(self, "Reconstruction 3D",
+                                "Aucun maillage 3D généré.\n"
+                                "Vérifiez que le volume DICOM contient des structures osseuses "
+                                "avec des valeurs HU entre 200 et 1600.")
+
+        # Stocker le volume normalisé
+        norm_vol = results.get('normalized_volume')
+        if norm_vol is not None:
+            self.current_volume = norm_vol
+            self.volume_viewer.set_volume_data(norm_vol)
+
+    @Slot(str)
+    def _on_recon_error(self, err: str):
+        self.action_reconstruct_3d.setEnabled(True)
+        self.progress_bar.setVisible(False)
+        self.status_bar.showMessage("Erreur reconstruction 3D", 3000)
+        QMessageBox.critical(self, "Erreur Reconstruction 3D", err)
 
     @Slot()
     def toggle_fullscreen(self):
