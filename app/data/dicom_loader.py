@@ -16,6 +16,7 @@ class PatientData:
     slices: List[pydicom.dataset.FileDataset]
     volume: Optional[np.ndarray] = None
     dicom_folder: str = ""
+    spacing: tuple = (1.0, 1.0, 1.0)  # (dz, dy, dx) en mm
 
 class DICOMManager:
     """Gestionnaire de chargement et manipulation DICOM"""
@@ -66,18 +67,34 @@ class DICOMManager:
         # Trier par InstanceNumber ou ImagePositionPatient
         dicom_files.sort(key=lambda x: int(x.InstanceNumber) if 'InstanceNumber' in x else x.filename)
 
-        # Créer l'objet PatientData
+        # Extraire le spacing depuis les métadonnées DICOM
+        spacing = self._extract_spacing(dicom_files)
+
         patient_id = patient_info.get('id', 'Unknown')
-        
         self.current_patient = PatientData(
             id=patient_id,
             info=patient_info,
             slices=dicom_files,
-            dicom_folder=folder_path
+            dicom_folder=folder_path,
+            spacing=spacing,
         )
+        patient_info['spacing'] = spacing
         
-        logger.info(f"Chargé {len(dicom_files)} fichiers DICOM pour le patient {patient_id}")
+        logger.info(f"Chargé {len(dicom_files)} fichiers DICOM pour le patient {patient_id}, spacing={spacing}")
         return self.current_patient
+
+    def _extract_spacing(self, dicom_files) -> tuple:
+        """Extraire (dz, dy, dx) en mm depuis les métadonnées."""
+        try:
+            ds = dicom_files[0]
+            ps = getattr(ds, 'PixelSpacing', [1.0, 1.0])
+            dy = float(ps[0]) if ps else 1.0
+            dx = float(ps[1]) if len(ps) > 1 else dy
+            dz = float(getattr(ds, 'SliceThickness', None) or
+                       getattr(ds, 'SpacingBetweenSlices', 1.0))
+            return (dz, dy, dx)
+        except Exception:
+            return (1.0, 1.0, 1.0)
 
     def _extract_patient_info(self, ds: pydicom.dataset.FileDataset) -> Dict[str, Any]:
         """Extraire les métadonnées pertinentes"""
@@ -96,23 +113,16 @@ class DICOMManager:
         }
 
     def get_volume_array(self) -> np.ndarray:
-        """Convertir les slices en volume numpy 3D"""
+        """Convertir les slices en volume numpy 3D avec correction HU."""
         if not self.current_patient or not self.current_patient.slices:
             return np.array([])
-            
         slices = self.current_patient.slices
-        
-        # Supposer que toutes les slices ont la même taille et type
         shape = (len(slices), slices[0].Rows, slices[0].Columns)
         volume = np.zeros(shape, dtype=np.float32)
-        
         for i, s in enumerate(slices):
-            volume[i] = s.pixel_array.astype(np.float32)
-            
-            # Appliquer RescaleSlope et RescaleIntercept si présents (Unités Hounsfield)
-            slope = getattr(s, 'RescaleSlope', 1)
-            intercept = getattr(s, 'RescaleIntercept', 0)
-            volume[i] = volume[i] * slope + intercept
-            
+            arr = s.pixel_array.astype(np.float32)
+            slope = float(getattr(s, 'RescaleSlope', 1.0))
+            intercept = float(getattr(s, 'RescaleIntercept', 0.0))
+            volume[i] = arr * slope + intercept
         self.current_patient.volume = volume
         return volume

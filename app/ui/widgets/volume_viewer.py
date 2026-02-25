@@ -148,6 +148,7 @@ class VolumeViewer(QWidget):
 
         # Boutons inactifs au démarrage
         self.volume_checkbox = self.chk_slice  # compat avec code existant
+        self._vertebrae: list = []
 
     def _style_axes(self):
         self.ax.set_facecolor("#0d0d1a")
@@ -183,6 +184,15 @@ class VolumeViewer(QWidget):
         self._render_mesh()
         self.btn_export_stl.setEnabled(True)
         self.mesh_loaded.emit()
+
+    def set_vertebrae_labels(self, vertebrae: list):
+        """
+        Mettre à jour les labels des vertèbres sur la vue 3D.
+        vertebrae : liste de dicts depuis VertebraDetector.detect()
+        """
+        self._vertebrae = vertebrae or []
+        if self.mesh_data is not None:
+            self._render_mesh()
 
     def set_volume_data(self, volume_data: np.ndarray):
         """
@@ -263,6 +273,31 @@ class VolumeViewer(QWidget):
             # Afficher les plans de coupe si demandé
             if self._show_slice and self.volume_data is not None:
                 self._render_slices()
+
+            # ── Labels vertèbres ──────────────────────────────────
+            for v in self._vertebrae:
+                try:
+                    cz, cy_v, cx_v = v["centroid_px"]
+                    # Convertir coords voxel → coords mesh
+                    # (les coords du mesh sont en voxels car spacing=1 dans le pipeline)
+                    label   = v.get("label", "?")
+                    status  = v.get("ml_status", v.get("status", "normal"))
+                    color   = v.get("color", "white")
+                    height  = v.get("height_mm", 0)
+                    hu      = v.get("hu_mean", 0)
+                    txt     = f"{label}\n{hu:.0f} HU\n{height:.0f}mm"
+                    self.ax.text(
+                        cx_v, cy_v, cz,
+                        txt,
+                        color=color,
+                        fontsize=7,
+                        fontweight="bold",
+                        ha="center", va="center",
+                        bbox=dict(boxstyle="round,pad=0.2", facecolor="#111122",
+                                  edgecolor=color, alpha=0.75, linewidth=0.8),
+                    )
+                except Exception:
+                    pass
 
             self.canvas.draw()
 

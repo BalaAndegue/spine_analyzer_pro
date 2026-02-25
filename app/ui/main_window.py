@@ -396,14 +396,26 @@ class MainWindow(QMainWindow):
         self.action_run_analysis.setEnabled(True)
         self.action_stop_analysis.setEnabled(False)
         self.progress_bar.setVisible(False)
-        self.status_bar.showMessage("Analyse complète terminée", 5000)
-        
+
+        n_v = len(results.get('vertebrae', []))
+        self.status_bar.showMessage(
+            f"✅ Analyse terminée — {n_v} vertèbres détectées", 6000
+        )
+
         self.results_panel.set_results(results)
-        # Ne pas appeler set_volume_data ici → utiliser set_mesh_data si mesh disponible
-        mesh = results.get('reconstruction', {}).get('mesh') if isinstance(results.get('reconstruction'), dict) else None
+
+        mesh      = results.get('mesh') or (
+                       results.get('reconstruction', {}).get('mesh')
+                       if isinstance(results.get('reconstruction'), dict) else None
+                   )
+        vertebrae = results.get('vertebrae', [])
+
         if mesh is not None:
             self.volume_viewer.set_mesh_data(mesh)
             self.visualization_tabs.setCurrentIndex(1)
+
+        if vertebrae:
+            self.volume_viewer.set_vertebrae_labels(vertebrae)
 
     @Slot(str)
     def on_analysis_error(self, err):
@@ -443,7 +455,7 @@ class MainWindow(QMainWindow):
         # Créer le worker
         self.recon_worker = ReconstructionWorker(
             dicom_folder=dicom_folder,
-            step_size=2,
+            step_size=1,           # step=1 pour plus de détails anatomiques
             decimate_ratio=0.3,
         )
         self.recon_thread = QThread()

@@ -61,26 +61,38 @@ class BoneSegmenter:
     def segment_with_cleanup(
         self,
         volume: np.ndarray,
-        min_size: int = 1000,
+        min_size: int = 500,
     ) -> np.ndarray:
         """
-        Segmentation + suppression des petites composantes isolées.
-        Plus propre mais plus lent.
+        Segmentation + suppression des très petites composantes.
+        Conserve TOUTES les composantes >= min_size (plusieurs vertèbres).
         """
         mask = self.segment(volume)
 
         try:
             from scipy.ndimage import label, binary_fill_holes
 
-            # Remplir les trous
-            mask = binary_fill_holes(mask)
+            # Remplir les trous slice par slice
+            for z in range(mask.shape[0]):
+                mask[z] = binary_fill_holes(mask[z])
 
-            # Garder uniquement les grandes composantes
+            # Garder TOUTES les composantes suffisamment grandes
             labeled, num = label(mask)
             if num > 1:
-                sizes = [(labeled == i).sum() for i in range(1, num + 1)]
-                mask = labeled == (np.argmax(sizes) + 1)
-                logger.info(f"Cleanup: {num} composantes → 1 conservée ({max(sizes):,} voxels)")
+                keep = np.zeros_like(mask, dtype=bool)
+                sizes = []
+                for i in range(1, num + 1):
+                    comp = labeled == i
+                    s = int(comp.sum())
+                    sizes.append(s)
+                    if s >= min_size:
+                        keep |= comp
+                n_kept = sum(1 for s in sizes if s >= min_size)
+                logger.info(
+                    f"Cleanup: {num} composantes → {n_kept} conservées "
+                    f"(min_size={min_size}, sizes max={max(sizes):,})"
+                )
+                mask = keep
 
         except ImportError:
             logger.warning("scipy non disponible — cleanup ignoré")
