@@ -22,23 +22,8 @@ def main():
     try:
         logger.info("Démarrage de SpineAnalyzer Pro")
         
-        # Initialiser l'application Qt
-        from PySide6.QtWidgets import QApplication
-        
-        # Créer l'application Qt
-        app = QApplication(sys.argv)
-        app.setApplicationName("SpineAnalyzer Pro")
-        app.setOrganizationName("MedicalAI")
-        app.setOrganizationDomain("medicalai.org")
-        
-        # Charger les styles
-        from app.ui.styles import load_stylesheet
-        stylesheet = load_stylesheet("dark")
-        app.setStyleSheet(stylesheet)
-        
-        # Créer et afficher la fenêtre principale
-        window = SpineAnalyzerApp()
-        window.show()
+        # SpineAnalyzerApp hérite déjà de QApplication, pas besoin d'en créer une séparée
+        app = SpineAnalyzerApp(sys.argv)
         
         logger.info("Application lancée avec succès")
         

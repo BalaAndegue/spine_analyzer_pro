@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, Optional
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QLabel
+    QWidget, QVBoxLayout, QPushButton, QLabel, QStyle
 )
 from PySide6.QtCore import Qt, Signal, Slot
 
@@ -86,7 +86,7 @@ class ControlPanel(QWidget):
         self.btn_export = QPushButton("Générer & Exporter Dossier")
         self.btn_export.setMinimumHeight(40)
         self.btn_export.setCursor(Qt.PointingHandCursor)
-        self.btn_export.setIcon(self.style().standardIcon(self.style().SP_DialogSaveButton))
+        self.btn_export.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         self.btn_export.clicked.connect(self.export_requested.emit)
         self.btn_export.setEnabled(False)
         
